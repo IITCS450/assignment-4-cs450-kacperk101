@@ -78,7 +78,31 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
 
+  // PAGE FAULT HANDLING
+  case T_PGFLT:
+    {
+      uint faultaddr = rcr2();
+      
+      // Only handle user-mode page faults
+      if((tf->cs & 3) == DPL_USER){
+        cprintf("pid %d %s: page fault at address 0x%x, eip=0x%x\n",
+                myproc()->pid, myproc()->name, faultaddr, tf->eip);
+        
+        if(faultaddr < PGSIZE){
+          cprintf("likely NULL dereference\n");
+        }
+        
+        myproc()->killed = 1;
+      }
+      else {
+        // Kernel mode - fall through to default
+        goto default_handler;
+      }
+    }
+    break;
+
   //PAGEBREAK: 13
+  default_handler:
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
       // In kernel, it must be our mistake.
