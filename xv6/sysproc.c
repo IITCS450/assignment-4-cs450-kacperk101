@@ -77,6 +77,28 @@ sys_sleep(void)
   return 0;
 }
 
+int
+sys_mprotect(void)
+{
+  void *addr;
+  int len;
+
+  if(argint(0, (int*)&addr) < 0 || argint(1, &len) < 0)
+    return -1;
+  return mprotectpages(myproc()->pgdir, addr, len);
+}
+
+int
+sys_munprotect(void)
+{
+  void *addr;
+  int len;
+
+  if(argint(0, (int*)&addr) < 0 || argint(1, &len) < 0)
+    return -1;
+  return munprotectpages(myproc()->pgdir, addr, len);
+}
+
 // return how many clock tick interrupts have occurred
 // since start.
 int

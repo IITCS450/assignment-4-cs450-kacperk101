@@ -344,6 +344,51 @@ bad:
   return 0;
 }
 
+int
+mprotectpages(pde_t *pgdir, void *addr, int len)
+{
+  uint a;
+  pte_t *pte;
+
+  if((uint)addr % PGSIZE != 0 || len <= 0)
+    return -1;
+
+  for(a = (uint)addr; a < (uint)addr + (uint)len * PGSIZE; a += PGSIZE){
+    if((pte = walkpgdir(pgdir, (void*)a, 0)) == 0)
+      return -1;
+    if((*pte & PTE_P) == 0)
+      return -1;
+    if((*pte & PTE_U) == 0)
+      return -1;
+    *pte &= ~PTE_W;
+  }
+  lcr3(V2P(pgdir));
+  return 0;
+}
+
+
+int
+munprotectpages(pde_t *pgdir, void *addr, int len)
+{
+  uint a;
+  pte_t *pte;
+
+  if((uint)addr % PGSIZE != 0 || len <= 0)
+    return -1;
+
+  for(a = (uint)addr; a < (uint)addr + (uint)len * PGSIZE; a += PGSIZE){
+    if((pte = walkpgdir(pgdir, (void*)a, 0)) == 0)
+      return -1;
+    if((*pte & PTE_P) == 0)
+      return -1;
+    if((*pte & PTE_U) == 0)
+      return -1;
+    *pte |= PTE_W;
+  }
+  lcr3(V2P(pgdir));
+  return 0;
+}
+
 //PAGEBREAK!
 // Map user virtual address to kernel address.
 char*
